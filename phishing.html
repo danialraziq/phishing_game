@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Awareness Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            background-color: #f3f4f6;
+        }
+        .email-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .game-header {
+            background-color: #1a56db;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px 8px 0 0;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-phishing {
+            background-color: #dc2626;
+            color: white;
+        }
+        .btn-safe {
+            background-color: #059669;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const phishingEmails = [
+            {
+                id: 1,
+                sender: 'security@yourcompany-update.net',
+                subject: 'Urgent: Account Security Update Required',
+                content: 'Dear employee, our security system detected unusual activity. Click here to verify your account immediately.',
+                isPhishing: true,
+            },
+            {
+                id: 2,
+                sender: 'hr@yourcompany.com',
+                subject: 'Annual Leave Policy Update',
+                content: 'Please review the attached updated leave policy for 2025. Contact HR if you have questions.',
+                isPhishing: false,
+            },
+            {
+                id: 3,
+                sender: 'payroll.system@company-payroll.net',
+                subject: 'Immediate Action: Salary Payment Failed',
+                content: 'Your latest salary payment failed due to incorrect bank details. Update your information within 24 hours to avoid delay.',
+                isPhishing: true,
+            },
+            {
+                id: 4,
+                sender: 'it.support@yourcompany.com',
+                subject: 'Scheduled System Maintenance',
+                content: 'The company servers will undergo maintenance this weekend. No action required from employees.',
+                isPhishing: false,
+            },
+            // Add more emails as needed
+        ];
+
+        function PhishingGame() {
+            const [score, setScore] = React.useState(0);
+            const [timeLeft, setTimeLeft] = React.useState(30);
+            const [currentEmail, setCurrentEmail] = React.useState(null);
+            const [gameOver, setGameOver] = React.useState(false);
+            const [gameStarted, setGameStarted] = React.useState(false);
+
+            React.useEffect(() => {
+                if (gameStarted && !gameOver) {
+                    const timer = setInterval(() => {
+                        setTimeLeft((prev) => {
+                            if (prev <= 1) {
+                                setGameOver(true);
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                    return () => clearInterval(timer);
+                }
+            }, [gameStarted, gameOver]);
+
+            React.useEffect(() => {
+                if (gameStarted && !currentEmail) {
+                    const randomEmail = phishingEmails[Math.floor(Math.random() * phishingEmails.length)];
+                    setCurrentEmail(randomEmail);
+                }
+            }, [gameStarted, currentEmail]);
+
+            const handleStart = () => {
+                setGameStarted(true);
+                setScore(0);
+                setTimeLeft(30);
+                setGameOver(false);
+                setCurrentEmail(null);
+            };
+
+            const handleAnswer = (isPhishingGuess) => {
+                if (isPhishingGuess === currentEmail.isPhishing) {
+                    setScore((prev) => prev + 1);
+                    setCurrentEmail(null);
+                } else {
+                    setGameOver(true);
+                }
+            };
+
+            return (
+                <div className="container mx-auto px-4 py-8">
+                    <div className="game-header flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-bold">Phishing Awareness Game</h1>
+                        <div className="flex items-center space-x-4">
+                            <div>Score: {score}</div>
+                            <div>Time: {timeLeft}s</div>
+                        </div>
+                    </div>
+
+                    <div className="email-container p-6">
+                        {!gameStarted ? (
+                            <div className="text-center">
+                                <h2 className="text-2xl font-bold mb-4">Welcome to the Phishing Awareness Game!</h2>
+                                <p className="mb-4">Identify phishing emails correctly to score points. One mistake and it's game over!</p>
+                                <button onClick={handleStart} className="btn btn-safe">
+                                    Start Game
+                                </button>
+                            </div>
+                        ) : gameOver ? (
+                            <div className="text-center">
+                                <h2 className="text-2xl font-bold mb-4">Game Over!</h2>
+                                <p className="mb-4">Final Score: {score}</p>
+                                <button onClick={handleStart} className="btn btn-safe">
+                                    Play Again
+                                </button>
+                            </div>
+                        ) : currentEmail ? (
+                            <div>
+                                <div className="border-b pb-4 mb-4">
+                                    <p className="mb-2"><strong>From:</strong> {currentEmail.sender}</p>
+                                    <p><strong>Subject:</strong> {currentEmail.subject}</p>
+                                </div>
+                                <div className="mb-8">
+                                    <p>{currentEmail.content}</p>
+                                </div>
+                                <div className="flex justify-center space-x-4">
+                                    <button onClick={() => handleAnswer(true)} className="btn btn-phishing">
+                                        Report as Phishing
+                                    </button>
+                                    <button onClick={() => handleAnswer(false)} className="btn btn-safe">
+                                        Mark as Safe
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center">Loading next email...</div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<PhishingGame />, document.getElementById('root'));
+    </script>
+</body>
+</html>
